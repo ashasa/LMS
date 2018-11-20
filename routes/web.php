@@ -32,4 +32,8 @@ Route::group(['middleware' => 'auth'], function()
 
     Route::get('/listemp', 'EmployeeController@listEmployees');
     Route::post('/changerole', 'EmployeeController@changeRole');
+
+    Route::get('/applyleave', 'LeaveController@showLeaveForm');
+    Route::post('/saveleave', 'LeaveController@saveLeave');
+    Route::post('/getleaves', 'LeaveController@getLeaves');
 });
