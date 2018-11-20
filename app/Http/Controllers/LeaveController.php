@@ -14,6 +14,16 @@ use App\Constants\AppConstants;
 
 class LeaveController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Leave Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles request for 
+    | add leaves by employees and list leaves
+    |
+    */
+
     /**
      * Create a new controller instance.
      *
@@ -24,25 +34,35 @@ class LeaveController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * List all leaves for admin user
+     * List self applied leaves for employees
+     *
+     */
     public function getLeaves(Request $request)
     {
         try
         {
             $input = $request->all();
 
+            // set order by clause
             $leaveQry = Leave::orderBy('fk_user_id')
                             ->orderBy('from_date')
                             ->orderBy('to_date');
 
             $showAll = false;
+            // when admin user accesses the page, the input array will contain a showall parameter
+            // in such case include applied employees name
             if(isset($input['showall']) === false) 
             {
                 $leaveQry->where('fk_user_id', auth()->user()->pk_user_id);
+                // join for fetching the backup employee id
                 $leaveQry->with(['backupEmp']);
             }
             else
             {
                 $showAll = true;
+                // join for fetching the backup employee id and applied user id
                 $leaveQry->with(['appliedEmp', 'backupEmp']);
             }
 
@@ -62,10 +82,16 @@ class LeaveController extends Controller
         }
     }
 
+    /**
+     * Handles request for show leave form
+     *
+     */
     public function showLeaveForm(Request $request)
     {
         try
         {
+            // fetch all users except the current user and admin user 
+            // used to populate backup employee list
             $otherEmpls = User::where('pk_user_id', '!=', auth()->user()->pk_user_id)
                     ->where('fk_role_id', '!=', AppConstants::SUPER_ADMIN_ROLE_ID)
                     ->get();
@@ -78,6 +104,10 @@ class LeaveController extends Controller
         }
     }
 
+    /**
+     * Handles ajax request for save leave 
+     *
+     */
     public function saveLeave(Request $request)
     {
         try

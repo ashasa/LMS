@@ -15,6 +15,17 @@ use App\Constants\AppConstants;
 
 class EmployeeController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Employee Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles request for 
+    | add new employee, save new employee
+    | list all employees and change role of employee 
+    |
+    */
+
     /**
      * Create a new controller instance.
      *
@@ -26,19 +37,20 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
+     * Show the view for add new employee
      *
-     * @return \Illuminate\Http\Response
      */
     public function addEmployee()
     {
         try
         {
+            // build array for gender
             $mstrGender = ['Male', 'Female'];
-            $mstrDesigs = Designation::all();
-            $mstrRoles = Role::where('pk_role_id', '!=', AppConstants::SUPER_ADMIN_ROLE_ID)->get();
 
-            return view('employee.addemp', compact('mstrDesigs', 'mstrRoles', 'mstrGender'));
+            // get all designations
+            $mstrDesigs = Designation::all();
+
+            return view('employee.addemp', compact('mstrDesigs', 'mstrGender'));
         }
         catch(Exception $e)
         {
@@ -46,12 +58,18 @@ class EmployeeController extends Controller
         }   
     }
 
+    /**
+     * Handles save employee ajax request
+     *
+     */
     public function saveEmployee(Request $request) 
     {
         try
         {
+            // get all request data as array
             $input = $request->all();
 
+            // perform validation on input data
             $valRules = [
                 'empname'=>'required',
                 'empcode'=>'required',
@@ -78,6 +96,7 @@ class EmployeeController extends Controller
             );
             if ($validator->passes())
             {
+                // check the emailid already exists
                 $userByEmail = User::getUserByEmailID($input['emailid']);
                 if(count($userByEmail) > 0)
                 {
@@ -86,6 +105,7 @@ class EmployeeController extends Controller
                     return $data;
                 }
 
+                // check the employee code already exists
                 $userByCode = User::getUserByEmpCode($input['empcode']);
                 if(count($userByCode) > 0)
                 {
@@ -94,16 +114,20 @@ class EmployeeController extends Controller
                     return $data;
                 }
 
+                // create user object and save the details
                 $userObject = new User();
                 $userObject->name = $input['empname'];
                 $userObject->email = $input['emailid'];
+                // default password - 'password' and encrypt
                 $userObject->password = bcrypt('password');
                 $userObject->employee_code = $input['empcode'];
                 $userObject->gender = $input['gender'];
+                // parse date from dmy to ymd format
                 $userObject->date_of_joining = Carbon::createFromFormat(AppConstants::USER_CARBON_FORMAT, $input['doj']);
                 $userObject->fk_designation_id = $input['designation'];
                 $userObject->mobile_number = $input['mobilenum'];
                 $userObject->address = $input['address'];
+                // default role of employee - Employee
                 $userObject->fk_role_id = AppConstants::EMP_ROLE_ID;
         
                 $userObject->save();
@@ -128,13 +152,19 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * List all employees excluding super admin
+     *
+     */
     public function listEmployees()
     {
         try
         {
+            // get all roles
             $mstrRoles = Role::get()
                             ->keyBy('pk_role_id');
 
+            // get all employees except super admin
             $allEmplyees = User::with('role')
                                 ->where('fk_role_id', '!=', AppConstants::SUPER_ADMIN_ROLE_ID)
                                 ->orderBy('name')
@@ -148,6 +178,10 @@ class EmployeeController extends Controller
         }
     }
 
+    /**
+     * Handles change role of employee
+     *
+     */
     public function changeRole(Request $request)
     {
         try
@@ -155,15 +189,8 @@ class EmployeeController extends Controller
             $input = $request->all();
             $data = [];
 
-            DB::transaction(function() use($input){
-                if( $input['roleId'] == \App\Constants\AppConstants::ADMIN_ROLE_ID )
-                {
-                    User::where('fk_role_id', \App\Constants\AppConstants::ADMIN_ROLE_ID)
-                            ->update(['fk_role_id' => \App\Constants\AppConstants::EMP_ROLE_ID]);
-                }
-                User::where('pk_user_id',$input['userId'])
-                            ->update(['fk_role_id' => $input['roleId']]);
-            });
+            User::where('pk_user_id',$input['userId'])
+                ->update(['fk_role_id' => $input['roleId']]);
 
             $data['status'] = AppConstants::RequestStatusSuccess;
             $data['message'] = 'Role of employee changed successfully';
