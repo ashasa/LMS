@@ -20,6 +20,13 @@ class Leave extends Model
      */
     protected $primaryKey = 'pk_leave_id';
 
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = ['from_date', 'to_date'];
+
     public function appliedEmp()
     {
         return $this->belongsTo('App\User', 'fk_user_id');

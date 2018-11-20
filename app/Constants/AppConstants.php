@@ -14,5 +14,5 @@ class AppConstants
     const RequestStatusFailed = 0;
     const RequestStatusSuccess = 1;
 
-    const RECORDS_PER_PAGE = 2;
+    const RECORDS_PER_PAGE = 10;
 }

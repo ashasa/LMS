@@ -20,8 +20,8 @@
                 @if($showAll === true)
                     <td>{{ $item->appliedEmp->name }}</td>
                 @endif
-                <td>{{ $item->from_date }}</td>
-                <td>{{ $item->to_date }}</td>
+                <td>{{ $item->from_date->format(\App\Constants\AppConstants::USER_CARBON_FORMAT) }}</td>
+                <td>{{ $item->to_date->format(\App\Constants\AppConstants::USER_CARBON_FORMAT) }}</td>
                 <td>{{ $item->reason }}</td>
                 <td>{{ $item->backupEmp->name }}</td>
             </tr>

@@ -39,10 +39,10 @@ class LeaveController extends Controller
             {
                 $leaveQry->where('fk_user_id', auth()->user()->pk_user_id);
                 $leaveQry->with(['backupEmp']);
-                $showAll = true;
             }
             else
             {
+                $showAll = true;
                 $leaveQry->with(['appliedEmp', 'backupEmp']);
             }
 
@@ -64,11 +64,18 @@ class LeaveController extends Controller
 
     public function showLeaveForm(Request $request)
     {
-        $otherEmpls = User::where('pk_user_id', '!=', auth()->user()->pk_user_id)
-                ->where('fk_role_id', '!=', AppConstants::SUPER_ADMIN_ROLE_ID)
-                ->get();
+        try
+        {
+            $otherEmpls = User::where('pk_user_id', '!=', auth()->user()->pk_user_id)
+                    ->where('fk_role_id', '!=', AppConstants::SUPER_ADMIN_ROLE_ID)
+                    ->get();
 
-        return view('leaves.applyleave', compact('otherEmpls', 'curUserLeaves'));
+            return view('leaves.applyleave', compact('otherEmpls', 'curUserLeaves'));
+        }
+        catch(Exception $e)
+        {
+            Log::debug($e);
+        }
     }
 
     public function saveLeave(Request $request)

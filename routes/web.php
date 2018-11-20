@@ -36,4 +36,8 @@ Route::group(['middleware' => 'auth'], function()
     Route::get('/applyleave', 'LeaveController@showLeaveForm');
     Route::post('/saveleave', 'LeaveController@saveLeave');
     Route::post('/getleaves', 'LeaveController@getLeaves');
+
+    Route::get('/listleaveappl', function () {
+        return view('leaves.showallleaves');
+    });
 });
