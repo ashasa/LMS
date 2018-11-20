@@ -103,9 +103,32 @@ class LeaveController extends Controller
             );
             if ($validator->passes())
             {
+                // start -- overlap validation for leave dates
+                $dateFromObj = Carbon::createFromFormat(AppConstants::USER_CARBON_FORMAT, $input['fromdate']);
+                $dateToObj = Carbon::createFromFormat(AppConstants::USER_CARBON_FORMAT, $input['todate']);
+
+                $dupCountObj = Leave::where('fk_user_id', auth()->user()->pk_user_id);
+
+                $dtfrmDBStr = $dateFromObj->format(AppConstants::DB_DATE_FORMAT);
+                $dttoDBStr = $dateToObj->format(AppConstants::DB_DATE_FORMAT);
+                $dupCountObj->where(function ($query) use($dtfrmDBStr, $dttoDBStr) {
+                    $query->whereBetween('from_date', [$dtfrmDBStr, $dttoDBStr]);
+                    $query->where(function ($querySub) use($dtfrmDBStr, $dttoDBStr) {
+                        $querySub->whereBetween('to_date', [$dtfrmDBStr, $dttoDBStr]);
+                    });
+                });
+                
+                if ($dupCountObj->count() > 0)
+                {
+                    $data['status'] = AppConstants::RequestStatusFailed;
+                    $data['message'] = 'Overlapping in leave dates found';
+                    return $data;
+                }
+                // end -- overlap validation for leave dates
+                
                 $lvObject = new Leave();
-                $lvObject->from_date = Carbon::createFromFormat(AppConstants::USER_CARBON_FORMAT, $input['fromdate']);
-                $lvObject->to_date = Carbon::createFromFormat(AppConstants::USER_CARBON_FORMAT, $input['todate']);
+                $lvObject->from_date = $dateFromObj;
+                $lvObject->to_date = $dateToObj;
                 $lvObject->fk_backup_user_id = $input['otheremp'];
                 $lvObject->reason = $input['reason'];
                 $lvObject->fk_user_id = auth()->user()->pk_user_id;
