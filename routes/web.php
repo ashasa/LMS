@@ -29,4 +29,7 @@ Route::group(['middleware' => 'auth'], function()
 
     Route::get('/addemp', 'EmployeeController@addEmployee');
     Route::post('/saveemp', 'EmployeeController@saveEmployee');
+
+    Route::get('/listemp', 'EmployeeController@listEmployees');
+    Route::post('/changerole', 'EmployeeController@changeRole');
 });

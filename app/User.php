@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return self::where('employee_code', $empCode)->get();
     }
+
+    public function role()
+    {
+        return $this->belongsTo('App\Role', 'fk_role_id');
+    }
 }
